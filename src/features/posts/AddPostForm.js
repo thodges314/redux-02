@@ -1,31 +1,38 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { nanoid } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectAllUsers } from '../users/usersSlice';
 
 import { addPost } from './postsSlice';
 
 const AddPostForm = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [userId, setUserId] = useState('');
+
+  const canSave = !!title && !!content && !!userId;
+
+  const users = useSelector(selectAllUsers);
+
   const dispatch = useDispatch();
 
   const handleTitleChange = (event) => setTitle(event.target.value);
   const handleContentChange = (event) => setContent(event.target.value);
+  const handleAuthorChange = (event) => setUserId(event.target.value);
 
   const handleSavePost = () => {
-    if (!!title && !!content) {
-      const newPost = {
-        id: nanoid(),
-        title,
-        content,
-      };
-
-      dispatch(addPost(newPost));
+    if (canSave) {
+      dispatch(addPost(title, content, userId));
 
       setTitle('');
       setContent('');
     }
   };
+
+  const renderedUsers = users.map((user) => (
+    <option key={user.id} value={user.id}>
+      {user.name}
+    </option>
+  ));
 
   return (
     <section>
@@ -39,6 +46,16 @@ const AddPostForm = () => {
           value={title}
           onChange={handleTitleChange}
         />
+        <label htmlFor="postAuthor">Author:</label>
+        <select
+          id="postAuthor"
+          name="postAuthor"
+          value={userId}
+          onChange={handleAuthorChange}
+        >
+          <option value=""></option>
+          {renderedUsers}
+        </select>
         <label htmlFor="postContent">Post Content:</label>
         <textarea
           id="postContent"
@@ -46,7 +63,7 @@ const AddPostForm = () => {
           value={content}
           onChange={handleContentChange}
         />
-        <button type="button" onClick={handleSavePost}>
+        <button type="button" onClick={handleSavePost} disabled={!canSave}>
           Add Post
         </button>
       </form>
